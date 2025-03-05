@@ -1,0 +1,28 @@
+# Usa una imagen base de Node.js
+FROM node:lts-alpine
+
+# Establece el directorio de trabajo en el contenedor
+WORKDIR /app
+
+# Copia package.json y package-lock.json para instalar dependencias primero
+COPY package*.json ./
+
+# Instala las dependencias
+RUN npm install
+
+# Copia el resto de los archivos de la aplicación
+COPY . . 
+
+# Expone el puerto en el que correrá el servidor
+# EXPOSE [Port you mentioned in the vite.config file]
+EXPOSE 5173
+
+# Comando para iniciar el servidor
+
+ENTRYPOINT ["npm"]
+CMD ["run", "dev"]
+
+
+
+
+

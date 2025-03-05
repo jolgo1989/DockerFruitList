@@ -1,0 +1,67 @@
+services:
+  mysqldb:
+    image: mysql
+    env_file:
+      - ./.env
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQLDB_PASSWORD}
+      - MYSQL_DATABASE=${MYSQLDB_DATABASE}
+    volumes:
+      - db-data:/var/lib/mysql
+    ports:
+      - ${MYSQLDB_LOCAL_PORT}:${MYSQLDB_DOCKER_PORT}
+    networks:
+      - service-network
+
+  server:
+    build:
+      context: backend # Aquí apuntamos a la carpeta correcta donde está el Dockerfile
+      dockerfile: Dockerfile
+    env_file:
+      - ./.env
+    develop: #Define un entorno de desarrollo. Todo lo que esté anidado bajo esta línea se aplicará cuando se esté en modo de desarrollo.
+      watch: #Esta sección especifica las acciones que deben observarse y realizarse automáticamente cuando ciertos archivos cambian.
+        - action: sync
+          path: backend/ #Especifica que se observarán cambios en el directorio raiz (DOCKER carpeta principal)
+          target: /app #Indica que los archivos y directorios desde DOCKER/ se sincronizarán en el directorio /app dentro del contenedor.
+          ignore:
+            - node_modules/
+        - action: rebuild
+          path: ./backend/package.json
+    depends_on:
+      - mysqldb
+    ports:
+      - ${NODE_LOCAL_PORT}:${NODE_DOCKER_PORT}
+    networks:
+      - service-network
+
+  cliente:
+    build:
+      context: frontend # Aquí apuntamos a la carpeta correcta donde está el Dockerfile
+      dockerfile: Dockerfile
+    env_file:
+      - ./.env
+    develop: #Define un entorno de desarrollo. Todo lo que esté anidado bajo esta línea se aplicará cuando se esté en modo de desarrollo.
+      watch: #Esta sección especifica las acciones que deben observarse y realizarse automáticamente cuando ciertos archivos cambian.
+        - action: sync
+          path: frontend/ #Especifica que se observarán cambios en el directorio raiz (DOCKER carpeta principal)
+          target: /app #Indica que los archivos y directorios desde DOCKER/ se sincronizarán en el directorio /app dentro del contenedor.
+          ignore:
+            - node_modules/
+        - action: rebuild
+          path: ./frontend/package.json
+    depends_on:
+      - server
+    ports:
+      - ${REACT_DOCKER_PORT}:${REACT_DOCKER_PORT}
+    networks:
+      - service-network
+
+# Ruta de la carpeta donde se guardan los datos
+volumes:
+  db-data:
+
+networks:
+  service-network: {} # Aquí definimos el nombre de la red que usaremos para la comunicación entre los contenedores
+
+# Nota: Usa (buil .) cuando quieres construir tu imagen Docker usando el Dockerfile que se encuentra en el mismo directorio donde está tu archivo docker-compose.yml. y buil context dockerfile para construir la imagen usando el Dockerfile que se encuentra en la carpeta especificada en el context.
