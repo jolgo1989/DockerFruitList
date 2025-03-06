@@ -4,23 +4,21 @@ FROM node:lts-alpine
 # Establece el directorio de trabajo en el contenedor
 WORKDIR /app
 
-# Copia package.json y package-lock.json para instalar dependencias primero
+# Copia solo los archivos de dependencias primero
 COPY package*.json ./
 
-# Instala las dependencias
-RUN npm install
+# Instala las dependencias y limpia la caché de npm
+RUN npm install && npm cache clean --force
 
 # Copia el resto de los archivos de la aplicación
-COPY . . 
+COPY . .
 
 # Expone el puerto en el que correrá el servidor
-# EXPOSE [Port you mentioned in the vite.config file]
 EXPOSE 5173
 
 # Comando para iniciar el servidor
+ENTRYPOINT ["npm", "run", "dev"]
 
-ENTRYPOINT ["npm"]
-CMD ["run", "dev"]
 
 
 
